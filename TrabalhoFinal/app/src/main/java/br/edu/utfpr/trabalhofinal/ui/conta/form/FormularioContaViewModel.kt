@@ -1,4 +1,5 @@
 package br.edu.utfpr.trabalhofinal.ui.conta.form
+import android.icu.text.SimpleDateFormat
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -9,7 +10,11 @@ import br.edu.utfpr.trabalhofinal.data.ContaDatasource
 import br.edu.utfpr.trabalhofinal.data.TipoContaEnum
 import br.edu.utfpr.trabalhofinal.ui.Arguments
 import java.math.BigDecimal
+import java.sql.Date
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.util.Locale
+
 class FormularioContaViewModel(
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -79,11 +84,11 @@ class FormularioContaViewModel(
             )
         }
     }
-    fun onStatusPagamentoAlterado(novoStatusPagamento: String) {
-        if (state.paga.valor != novoStatusPagamento) {
+    fun onStatusPagamentoAlterado(novoStatusPagamento: Boolean) {
+        if (state.paga.pago != novoStatusPagamento) {
             state = state.copy(
                 paga = state.paga.copy(
-                    valor = novoStatusPagamento
+                    pago = novoStatusPagamento
                 )
             )
         }
@@ -99,12 +104,13 @@ class FormularioContaViewModel(
     }
     fun salvarConta() {
         if (formularioValido()) {
+            val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
             state = state.copy(
                 salvando = true
             )
             val conta = state.conta.copy(
                 descricao = state.descricao.valor,
-                data = LocalDate.parse(state.data.valor),
+                data = LocalDate.parse(state.data.valor, formatter),
                 valor = BigDecimal(state.valor.valor),
                 paga = state.paga.valor == "true",
                 tipo = TipoContaEnum.valueOf(state.tipo.valor)

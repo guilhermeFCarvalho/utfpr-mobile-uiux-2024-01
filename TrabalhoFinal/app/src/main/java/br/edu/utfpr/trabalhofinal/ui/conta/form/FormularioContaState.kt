@@ -2,6 +2,7 @@ package br.edu.utfpr.trabalhofinal.ui.conta.form
 import br.edu.utfpr.trabalhofinal.data.Conta
 data class CampoFormulario(
     val valor: String = "",
+    val pago: Boolean = false,
     val codigoMensagemErro: Int = 0
 ) {
     val contemErro get(): Boolean = codigoMensagemErro > 0
