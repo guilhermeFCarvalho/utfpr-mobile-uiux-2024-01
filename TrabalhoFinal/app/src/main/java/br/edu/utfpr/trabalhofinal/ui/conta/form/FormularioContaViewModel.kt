@@ -1,4 +1,5 @@
 package br.edu.utfpr.trabalhofinal.ui.conta.form
+
 import android.icu.text.SimpleDateFormat
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -23,11 +24,13 @@ class FormularioContaViewModel(
         ?.toIntOrNull() ?: 0
     var state: FormularioContaState by mutableStateOf(FormularioContaState(idConta = idConta))
         private set
+
     init {
         if (state.idConta > 0) {
             carregarConta()
         }
     }
+
     fun carregarConta() {
         state = state.copy(
             carregando = true,
@@ -51,6 +54,7 @@ class FormularioContaViewModel(
             )
         }
     }
+
     fun onDescricaoAlterada(novaDescricao: String) {
         if (state.descricao.valor != novaDescricao) {
             state = state.copy(
@@ -61,11 +65,13 @@ class FormularioContaViewModel(
             )
         }
     }
+
     private fun validarDescricao(descricao: String): Int = if (descricao.isBlank()) {
         R.string.descricao_obrigatoria
     } else {
         0
     }
+
     fun onDataAlterada(novaData: String) {
         if (state.data.valor != novaData) {
             state = state.copy(
@@ -75,15 +81,25 @@ class FormularioContaViewModel(
             )
         }
     }
+
     fun onValorAlterado(novoValor: String) {
         if (state.valor.valor != novoValor) {
             state = state.copy(
                 valor = state.valor.copy(
-                    valor = novoValor
+                    valor = novoValor,
+                    codigoMensagemErro = validarValor(novoValor)
+
                 )
             )
         }
     }
+
+    private fun validarValor(valor: String): Int = if (valor.isBlank()) {
+        R.string.mandatory_value
+    } else {
+        0
+    }
+
     fun onStatusPagamentoAlterado(novoStatusPagamento: Boolean) {
         if (state.paga.pago != novoStatusPagamento) {
             state = state.copy(
@@ -93,6 +109,7 @@ class FormularioContaViewModel(
             )
         }
     }
+
     fun onTipoAlterado(novoTipo: String) {
         if (state.tipo.valor != novoTipo) {
             state = state.copy(
@@ -102,18 +119,36 @@ class FormularioContaViewModel(
             )
         }
     }
+
+    private fun validateDate(): LocalDate {
+        if (state.data.valor.isNotBlank()) {
+            val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
+            return LocalDate.parse(state.data.valor, formatter)
+        }
+        return LocalDate.now();
+    }
+
+    private fun validateType(): TipoContaEnum {
+        if (state.tipo.valor.isNotBlank()) {
+            return TipoContaEnum.valueOf(state.tipo.valor)
+        }
+        return TipoContaEnum.RECEITA
+
+
+    }
+
     fun salvarConta() {
         if (formularioValido()) {
-            val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
+
             state = state.copy(
                 salvando = true
             )
             val conta = state.conta.copy(
                 descricao = state.descricao.valor,
-                data = LocalDate.parse(state.data.valor, formatter),
+                data = validateDate(),
                 valor = BigDecimal(state.valor.valor),
-                paga = state.paga.valor == "true",
-                tipo = TipoContaEnum.valueOf(state.tipo.valor)
+                paga = state.paga.pago,
+                tipo = validateType()
             )
             ContaDatasource.instance.salvar(conta)
             state = state.copy(
@@ -122,20 +157,27 @@ class FormularioContaViewModel(
             )
         }
     }
+
     private fun formularioValido(): Boolean {
         state = state.copy(
             descricao = state.descricao.copy(
                 codigoMensagemErro = validarDescricao(state.descricao.valor)
+            ),
+            valor = state.valor.copy(
+                codigoMensagemErro = validarValor(state.valor.valor)
             )
         )
         return state.formularioValido
     }
+
     fun mostrarDialogConfirmacao() {
         state = state.copy(mostrarDialogConfirmacao = true)
     }
+
     fun ocultarDialogConfirmacao() {
         state = state.copy(mostrarDialogConfirmacao = false)
     }
+
     fun removerConta() {
         state = state.copy(
             excluindo = true,
@@ -146,6 +188,7 @@ class FormularioContaViewModel(
             contaPersistidaOuRemovida = true
         )
     }
+
     fun onMensagemExibida() {
         state = state.copy(codigoMensagem = 0)
     }
