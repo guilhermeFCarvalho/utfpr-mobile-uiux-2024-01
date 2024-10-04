@@ -1,6 +1,5 @@
 package br.edu.utfpr.trabalhofinal.ui.conta.form
 
-import android.icu.text.SimpleDateFormat
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -10,11 +9,10 @@ import br.edu.utfpr.trabalhofinal.R
 import br.edu.utfpr.trabalhofinal.data.ContaDatasource
 import br.edu.utfpr.trabalhofinal.data.TipoContaEnum
 import br.edu.utfpr.trabalhofinal.ui.Arguments
+import br.edu.utfpr.trabalhofinal.utils.formatar
 import java.math.BigDecimal
-import java.sql.Date
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-import java.util.Locale
+import java.time.format.DateTimeFormatterBuilder
 
 class FormularioContaViewModel(
     savedStateHandle: SavedStateHandle
@@ -47,10 +45,10 @@ class FormularioContaViewModel(
                 carregando = false,
                 conta = conta,
                 descricao = state.descricao.copy(valor = conta.descricao),
-                data = state.data.copy(valor = conta.data.toString()),
+                data = state.data.copy(valor = conta.data.formatar()),
                 valor = state.valor.copy(valor = conta.valor.toString()),
-                paga = state.paga.copy(valor = conta.paga.toString()),
-                tipo = state.tipo.copy(valor = conta.tipo.name)
+                paga = state.paga.copy(pago = conta.paga),
+                tipo = state.tipo.copy(tipoConta = conta.tipo)
             )
         }
     }
@@ -83,11 +81,13 @@ class FormularioContaViewModel(
     }
 
     fun onValorAlterado(novoValor: String) {
-        if (state.valor.valor != novoValor) {
+        val filteredValue = novoValor.filter { it.isDigit() || it == '.' }
+
+        if (state.valor.valor != filteredValue) {
             state = state.copy(
                 valor = state.valor.copy(
-                    valor = novoValor,
-                    codigoMensagemErro = validarValor(novoValor)
+                    valor = filteredValue,
+                    codigoMensagemErro = validarValor(filteredValue)
 
                 )
             )
@@ -110,36 +110,30 @@ class FormularioContaViewModel(
         }
     }
 
-    fun onTipoAlterado(novoTipo: String) {
-        if (state.tipo.valor != novoTipo) {
+    fun onTipoAlterado(novoTipo: TipoContaEnum) {
+        if (state.tipo.tipoConta != novoTipo) {
             state = state.copy(
                 tipo = state.tipo.copy(
-                    valor = novoTipo
+                    tipoConta = novoTipo
                 )
             )
         }
     }
 
     private fun validateDate(): LocalDate {
+
         if (state.data.valor.isNotBlank()) {
-            val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
+            val formatter = DateTimeFormatterBuilder()
+                .appendPattern("[dd/MM/yyyy][yyyy-MM-dd]")
+                .toFormatter()
             return LocalDate.parse(state.data.valor, formatter)
         }
         return LocalDate.now();
     }
 
-    private fun validateType(): TipoContaEnum {
-        if (state.tipo.valor.isNotBlank()) {
-            return TipoContaEnum.valueOf(state.tipo.valor)
-        }
-        return TipoContaEnum.RECEITA
-
-
-    }
 
     fun salvarConta() {
         if (formularioValido()) {
-
             state = state.copy(
                 salvando = true
             )
@@ -148,7 +142,7 @@ class FormularioContaViewModel(
                 data = validateDate(),
                 valor = BigDecimal(state.valor.valor),
                 paga = state.paga.pago,
-                tipo = validateType()
+                tipo = state.tipo.tipoConta,
             )
             ContaDatasource.instance.salvar(conta)
             state = state.copy(

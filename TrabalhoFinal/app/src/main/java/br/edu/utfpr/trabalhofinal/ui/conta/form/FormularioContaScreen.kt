@@ -259,12 +259,12 @@ private fun FormContent(
     onDataAlterada: (String) -> Unit,
     onValorAlterado: (String) -> Unit,
     onStatusPagamentoAlterado: (Boolean) -> Unit,
-    onTipoAlterado: (String) -> Unit
+    onTipoAlterado: (TipoContaEnum) -> Unit
 ) {
 
     var showModalInput by remember { mutableStateOf(false) }
-    var paidChecked by remember { mutableStateOf(false) }
-    var radioSelected by remember { mutableStateOf<TipoContaEnum>(TipoContaEnum.DESPESA) }
+    var paidChecked by remember { mutableStateOf(paga.pago) }
+    var radioSelected by remember { mutableStateOf(tipo.tipoConta) }
 
 
 
@@ -290,6 +290,26 @@ private fun FormContent(
                 campoFormulario = descricao,
                 onValorAlterado = onDescricaoAlterada,
                 keyboardCapitalization = KeyboardCapitalization.Words,
+                enabled = !processando
+            )
+        }
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Start
+
+        ) {
+            Icon(
+                imageVector = Icons.Filled.AttachMoney,
+                contentDescription = stringResource(R.string.valor),
+                tint = MaterialTheme.colorScheme.outline
+            )
+            FormTextField(
+                keyboardType = KeyboardType.Number,
+                modifier = formTextFieldModifier,
+                titulo = stringResource(R.string.valor),
+                campoFormulario = valor,
+                onValorAlterado = onValorAlterado,
                 enabled = !processando
             )
         }
@@ -336,24 +356,7 @@ private fun FormContent(
 
                 )
         }
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Start
 
-        ) {
-            Icon(
-                imageVector = Icons.Filled.AttachMoney,
-                contentDescription = stringResource(R.string.valor),
-                tint = MaterialTheme.colorScheme.outline
-            )
-            FormTextField(
-                modifier = formTextFieldModifier,
-                titulo = stringResource(R.string.valor),
-                campoFormulario = valor,
-                onValorAlterado = onValorAlterado,
-                enabled = !processando
-            )
-        }
         Row(
             modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
@@ -384,7 +387,7 @@ private fun FormContent(
                     selected = radioSelected == it,
                     onClick = {
                         radioSelected = it
-                        onTipoAlterado(it.name)
+                        onTipoAlterado(it)
 
                     },
                     enabled = !processando

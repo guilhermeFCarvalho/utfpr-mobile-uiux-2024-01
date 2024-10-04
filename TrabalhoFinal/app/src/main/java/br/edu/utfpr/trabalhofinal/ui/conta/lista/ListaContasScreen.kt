@@ -16,6 +16,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.ThumbDownOffAlt
+import androidx.compose.material.icons.filled.ThumbUp
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -164,14 +166,46 @@ private fun List(
 ) {
     LazyColumn(modifier = modifier) {
         items(contas) { conta ->
-            val descricao = "${conta.data.formatar()} - ${conta.descricao}"
             ListItem(
                 modifier = Modifier.clickable { onContaPressed(conta) },
-                headlineContent = { Text(descricao) },
-            )
+                headlineContent = { Text(conta.descricao) },
+                supportingContent = {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween // Alinhamento da data à esquerda e valor à direita
+                    ) {
+                        Text(conta.data.formatar()) // Data
+                        Text(
+                            text = when (conta.tipo) {
+                                TipoContaEnum.RECEITA -> "${conta.valor.formatar()}"
+                                TipoContaEnum.DESPESA -> "- ${conta.valor.formatar()}"
+                            },
+                            color = when (conta.tipo) {
+                                TipoContaEnum.RECEITA -> Color(0xFF00984E)
+                                TipoContaEnum.DESPESA -> Color(0xFFCF5355)
+                            }
+                        )
+                    }
+                },
+                leadingContent = {
+                    Icon(
+                        imageVector = when (conta.paga) {
+                            true -> Icons.Filled.ThumbUp
+                            false -> Icons.Filled.ThumbDownOffAlt
+                        },
+                        tint = when (conta.tipo) {
+                            TipoContaEnum.RECEITA -> Color(0xFF00984E)
+                            TipoContaEnum.DESPESA -> Color(0xFFCF5355)
+                        },
+                        contentDescription = null,
+                    )
+                },
+
+                )
         }
     }
 }
+
 
 @Preview(showBackground = true)
 @Composable
@@ -215,6 +249,11 @@ fun Totalizador(
     valor: BigDecimal,
     textColor: Color
 ) {
+    val valueColor: Color = when {
+        valor > BigDecimal.ZERO -> Color(0xFF00984E)
+        valor < BigDecimal.ZERO -> Color(0xFFCF5355)
+        else -> textColor
+    }
     Row(
         modifier = modifier
             .fillMaxWidth(),
@@ -232,7 +271,7 @@ fun Totalizador(
             modifier = Modifier.width(100.dp),
             textAlign = TextAlign.End,
             text = valor.formatar(),
-            color = textColor
+            color = valueColor
         )
         Spacer(Modifier.size(20.dp))
     }

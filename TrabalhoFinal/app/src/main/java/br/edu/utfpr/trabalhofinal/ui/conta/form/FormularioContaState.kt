@@ -1,8 +1,11 @@
 package br.edu.utfpr.trabalhofinal.ui.conta.form
 import br.edu.utfpr.trabalhofinal.data.Conta
+import br.edu.utfpr.trabalhofinal.data.TipoContaEnum
+
 data class CampoFormulario(
     val valor: String = "",
     val pago: Boolean = false,
+    val tipoConta: TipoContaEnum = TipoContaEnum.DESPESA,
     val codigoMensagemErro: Int = 0
 ) {
     val contemErro get(): Boolean = codigoMensagemErro > 0
